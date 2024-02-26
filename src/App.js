@@ -1,4 +1,3 @@
-import logo from './logo.svg';
 import { TextEditor } from './components/texteditor';// Import Sun Editor's CSS File
 import './App.css'
 function App() {

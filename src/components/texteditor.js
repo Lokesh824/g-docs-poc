@@ -3,10 +3,14 @@ import SunEditor from "suneditor-react";
 import "suneditor/dist/css/suneditor.min.css";
 import { Button, Modal, Input, Select, Col, Row } from "antd";
 // Import katex
-import katex from "katex";
 import "katex/dist/katex.min.css";
 import axios from "axios";
 import DocumentMenuBar from "./Menubar/doc-menubar";
+import MyDiffComponent from "./diffChecker";
+import katex from 'katex';
+import 'katex/dist/contrib/auto-render';
+import 'katex/dist/katex.min.css';
+import Latex from 'react-latex-next';
 const htmlTemplate = `<html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -27,14 +31,9 @@ const htmlTemplate = `<html>
 
 </html>`;
 
-  const latexRender = (content, targetElement)=>{
-    katex.render(content, targetElement, { throwOnError: false});
-  }
 const editorOptions = {
-  plugins:[
-    {name:'latex',display:'submenu',content:'file', data:latexRender}
-  ],
   ltr: true,
+  katex,
   toolbarContainer: "#menubar",
   buttonList: [
     ["undo", "redo"],
@@ -141,7 +140,7 @@ export const TextEditor = () => {
   const [value, setValue] = useState("");
   const [newFolderName, setNewFolderName] = useState("");
   const [newFileName, setNewFileName] = useState("");
-
+  const [showVersion, setShowVersion] = useState(false);
   useEffect(() => {
     console.log(editorRef.current.editor);
   }, []);
@@ -178,7 +177,21 @@ export const TextEditor = () => {
   // console.log('error!')
   // return true;
   // }
-
+  useEffect(() => {
+    // Update math equations when the editor content changes
+    const editor = document.getElementById("pd-editor"); // Replace with your editor ID
+    if (editor) {
+      editor.addEventListener("input", () => {
+        window.renderMathInElement(editor, {
+          delimiters: [
+            { left: "$$", right: "$$", display: true },
+            { left: "\\[", right: "\\]", display: true },
+            { left: "\\(", right: "\\)", display: false },
+          ],
+        });
+      });
+    }
+  }, []);
   useEffect(() => {
     if (!contentRef.current) return;
     contentRef.current.innerHTML = value;
@@ -190,6 +203,7 @@ export const TextEditor = () => {
   const onChangeHandler = (content) => {
     // console.log(content);
     setValue(content);
+    console.log("the conenct s", content);
   };
   const onsave = (dta) => {
     console.log("asdasd", dta);
@@ -241,75 +255,92 @@ export const TextEditor = () => {
     console.log("test");
     setSelectedFolder(val);
   };
+  const handleMenu = (event) => {
+    console.log(event);
+    if (event.key === "version") {
+      setShowVersion(!showVersion);
+    }
+  };
   return (
     <div>
-      <DocumentMenuBar onNewFolder={showModal} onNewFile={showFileModal} onPrint={handlePrint}/>
-      <div
-        className="sun-editor"
-        id="menubar"
-        style={{ background: "red", width: "100%" }}
-      ></div>
+      <DocumentMenuBar
+        handleMenu={handleMenu}
+        onNewFolder={showModal}
+        onNewFile={showFileModal}
+        onPrint={handlePrint}
+      />
 
-      <Modal
-        title="Create New Folder"
-        open={isModalOpen}
-        onOk={handleOk}
-        onCancel={handleCancel}
-      >
-        <Input
-          value={newFolderName}
-          onChange={(e) => setNewFolderName(e.target.value)}
-          placeholder="Enter folder name..."
-        />
-        ;
-      </Modal>
+      {showVersion === true ? (
+        <MyDiffComponent />
+      ) : (
+        <>
+          <div
+            className="sun-editor"
+            id="menubar"
+            style={{ background: "red", width: "100%" }}
+          ></div>
 
-      <Modal
-        title="Create New File"
-        open={isFileModalOpen}
-        onOk={handleFileOk}
-        onCancel={handleFileCancel}
-      >
-        <Select
-          value={selectedFolder}
-          style={{ width: "100%" }}
-          onChange={handleFolderChange}
-          options={[
-            {
-              value: "1NmcGu3XVYLHwNl6rRUDGqfma_8lqG7Kf",
-              label: "1NmcGu3XVYLHwNl6rRUDGqfma_8lqG7Kf",
-            },
-          ]}
-        />
-        <br />
-        <Input
-          value={newFileName}
-          onChange={(e) => setNewFileName(e.target.value)}
-          placeholder="Enter file name..."
-        />
-        ;
-      </Modal>
-      <Row>
-        <Col span={6}>col</Col>
-        <Col span={12}>
-          <SunEditor
-            getSunEditorInstance={getSunEditorInstance}
-            setOptions={editorOptions}
-            placeholder="Please type here..."
-            autoFocus={true}
-            lang="en"
-            name="pd-editor"
-            onSave={onsave}
-            width="100%"
-            height="85vh"
-            // onImageUploadError={onImageUploadError}
-            onChange={onChangeHandler}
-          />
-        </Col>
-        <Col span={6}>col</Col>
-      </Row>
-      {/* <button onClick={onClickHandler} type="button">parsear</button> */}
-      {/* <div ref={contentRef}></div> */}
+          <Modal
+            title="Create New Folder"
+            open={isModalOpen}
+            onOk={handleOk}
+            onCancel={handleCancel}
+          >
+            <Input
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              placeholder="Enter folder name..."
+            />
+            ;
+          </Modal>
+
+          <Modal
+            title="Create New File"
+            open={isFileModalOpen}
+            onOk={handleFileOk}
+            onCancel={handleFileCancel}
+          >
+            <Select
+              value={selectedFolder}
+              style={{ width: "100%" }}
+              onChange={handleFolderChange}
+              options={[
+                {
+                  value: "1NmcGu3XVYLHwNl6rRUDGqfma_8lqG7Kf",
+                  label: "1NmcGu3XVYLHwNl6rRUDGqfma_8lqG7Kf",
+                },
+              ]}
+            />
+            <br />
+            <Input
+              value={newFileName}
+              onChange={(e) => setNewFileName(e.target.value)}
+              placeholder="Enter file name..."
+            />
+            ;
+          </Modal>
+          <Row>
+            <Col span={6}>col</Col>
+            <Col span={12}>
+              <SunEditor
+                getSunEditorInstance={getSunEditorInstance}
+                setOptions={editorOptions}
+                placeholder="Please type here..."
+                autoFocus={true}
+                lang="en"
+                name="pd-editor"
+                onSave={onsave}
+                width="100%"
+                height="85vh"
+                id="pd-editor"
+                // onImageUploadError={onImageUploadError}
+                onChange={onChangeHandler}
+              />
+            </Col>
+            <Col span={6}>col</Col>
+          </Row>
+        </>
+      )}
     </div>
   );
 };

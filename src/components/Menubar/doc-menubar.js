@@ -39,15 +39,15 @@ const items = [
     ],
   },
   {
-    label: 'Edit',
+    label: "Edit",
     key: "alipay",
   },
   {
-    label: 'Print',
+    label: "Print",
     key: "print",
   },
   {
-    label: 'Versions',
+    label: "Versions",
     key: "version",
   },
 ];
@@ -57,13 +57,14 @@ const DocumentMenuBar = (props) => {
   const onClick = (e) => {
     console.log("click ", e);
     // setCurrent(e.key);
-    if(e.key === 'newfolder'){
-        props.onNewFolder();
-    }else if(e.key === 'newfile'){
-        props.onNewFile();
-    }else if(e.key="print"){
-        props.onPrint();
+    if (e.key === "newfolder") {
+      props.onNewFolder();
+    } else if (e.key === "newfile") {
+      props.onNewFile();
+    } else if (e.key === "print") {
+      props.onPrint();
     }
+    props.handleMenu(e);
   };
   return (
     <Menu
