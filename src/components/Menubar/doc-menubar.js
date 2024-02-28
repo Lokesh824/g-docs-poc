@@ -7,6 +7,7 @@ const items = [
     children: [
       { label: "New File", key: "newfile" },
       { label: "New Folder", key: "newfolder" },
+      { label: "Import HTML", key: "importhtml" },
 
       {
         type: "group",

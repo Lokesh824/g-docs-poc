@@ -11,7 +11,10 @@ import katex from "katex";
 import "katex/dist/contrib/auto-render";
 import "katex/dist/katex.min.css";
 import Latex from "react-latex-next";
-const htmlTemplate = `<html>
+const { TextArea } = Input;
+
+const generateHTML = (bodyContent) => {
+  return `<html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>Preview</title>
@@ -4263,15 +4266,16 @@ const htmlTemplate = `<html>
 
 <body class="sun-editor-editable" style="margin:10px auto !important; height:auto !important;"
     data-new-gr-c-s-check-loaded="14.1054.0" data-gr-ext-installed="">
-    
+    ${bodyContent}
 </body>
 
 </html>`;
-
+};
 const editorOptions = {
   ltr: true,
   katex,
   toolbarContainer: "#menubar",
+  defaultStyle: "text-align:left",
   buttonList: [
     ["undo", "redo"],
     ["removeFormat"],
@@ -4290,6 +4294,12 @@ const editorOptions = {
     ["math"],
     ["preview", "print", "save", "template"],
   ],
+  customButtons: {
+    customSave: {
+      text: "Save",
+      handler: () => this.handleSave(),
+    },
+  },
   font: [
     "Arial",
     "Comic Sans MS",
@@ -4374,12 +4384,15 @@ const editorOptions = {
 export const TextEditor = () => {
   const editorRef = useRef();
   const contentRef = useRef();
+  const sunEditorRef = React.createRef();
   const [value, setValue] = useState("");
   const [newFolderName, setNewFolderName] = useState("");
   const [newFileName, setNewFileName] = useState("");
+  const [importHTMLString, setimportHTMLString] = useState("");
   const [showVersion, setShowVersion] = useState(false);
+  const [showHTMLImport, setShowHTMLImport] = useState(false);
   useEffect(() => {
-    console.log(editorRef.current.editor);
+    console.log("dasdsdads", editorRef.current);
   }, []);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFileModalOpen, setIsFileModalOpen] = useState(false);
@@ -4389,6 +4402,9 @@ export const TextEditor = () => {
   };
   const showModal = () => {
     setIsModalOpen(true);
+  };
+  const handleSave = () => {
+    console.log("asdasd");
   };
 
   const handleOk = (e) => {
@@ -4443,14 +4459,28 @@ export const TextEditor = () => {
     console.log("the conenct s", content);
   };
   const onsave = (dta) => {
-    console.log("asdasd", dta);
+    let doc_id = window.location.search.split("=")[1];
+    let generatedHTML = generateHTML(dta);
+    axios
+      .post(`http://localhost:5000/upload_html`, {
+        doc_id: doc_id,
+        modified_html_data: generatedHTML,
+      })
+      .then((res) => {
+        console.log(res);
+        alert(`Saved the data into google docs....`);
+      })
+      .catch((e) => {
+        console.log(e);
+        alert("error -", e);
+      });
+    console.log("savebtn clicks", generatedHTML);
   };
   const handlePrint = () => {
-    const parser = new DOMParser();
-    const document = parser.parseFromString(htmlTemplate, "text/html");
-    console.log("testing...", document.body);
+    let generatedHTML = generateHTML(value);
+    console.log(generatedHTML);
     var printWindow = window.open("", "", "height=400,width=800");
-    printWindow.document.write(document.body.innerHTML.toString());
+    printWindow.document.write(generatedHTML);
     printWindow.document.close();
     printWindow.print();
   };
@@ -4471,7 +4501,6 @@ export const TextEditor = () => {
   };
   const createNewFile = (e) => {
     e.preventDefault();
-    console.log("the dagta is now......", selectedFolder, newFileName);
     axios
       .post(`http://localhost:5000/create_doc`, {
         folder_id: selectedFolder,
@@ -4481,7 +4510,7 @@ export const TextEditor = () => {
         console.log(res);
         console.log(res.data);
         alert(`New File created successfully with id -> ${res.data.doc_id}`);
-        window.location.href = "/doc/" + res.data.doc_id;
+        window.location.href = "?doc=" + res.data.doc_id;
       })
       .catch((e) => {
         console.log(e);
@@ -4497,6 +4526,16 @@ export const TextEditor = () => {
     if (event.key === "version") {
       setShowVersion(!showVersion);
     }
+    if (event.key === "importhtml") {
+      setShowHTMLImport(true);
+    }
+  };
+  const handleHTMLOk = () => {
+    setValue(importHTMLString);
+    setShowHTMLImport(false);
+  };
+  const handleHTMLCancel = () => {
+    setShowHTMLImport(false);
   };
   return (
     <div>
@@ -4516,7 +4555,19 @@ export const TextEditor = () => {
             id="menubar"
             style={{ background: "red", width: "100%" }}
           ></div>
-
+          <Modal
+            title="Enter the HTML String"
+            open={showHTMLImport}
+            onOk={handleHTMLOk}
+            onCancel={handleHTMLCancel}
+          >
+            <TextArea
+              rows={4}
+              placeholder="Enter HTML string here..."
+              value={importHTMLString}
+              onChange={(e) => setimportHTMLString(e.target.value)}
+            />
+          </Modal>
           <Modal
             title="Create New Folder"
             open={isModalOpen}
@@ -4562,15 +4613,17 @@ export const TextEditor = () => {
               <SunEditor
                 getSunEditorInstance={getSunEditorInstance}
                 setOptions={editorOptions}
+                ref={sunEditorRef}
                 placeholder="Please type here..."
                 autoFocus={true}
                 lang="en"
+                style={{ textAlign: "left" }}
                 name="pd-editor"
-                onSave={onsave}
                 width="100%"
+                onSave={onsave}
                 height="85vh"
                 id="pd-editor"
-                // setContents={testData}
+                setContents={value}
                 // onImageUploadError={onImageUploadError}
                 onChange={onChangeHandler}
               />
