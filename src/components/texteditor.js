@@ -4271,6 +4271,23 @@ const generateHTML = (bodyContent) => {
 
 </html>`;
 };
+
+const handleImageUpload = (
+  targetImgElement,
+  index,
+  state,
+  imageInfo,
+  remainingFilesCount
+) => {
+  // Implement your image upload logic here
+  // You can use a file input, upload to a server, and return the image URL
+  // Example:
+  const imageUrl = "https://example.com/image.jpg";
+  // Insert the image into the editor
+  targetImgElement.src = imageUrl;
+  targetImgElement.alt = imageInfo.name;
+};
+
 const editorOptions = {
   ltr: true,
   katex,
@@ -4317,7 +4334,7 @@ const editorOptions = {
     "Times New Roman",
     "Helvetica",
   ],
-  imageRotation: false,
+  imageRotation: true,
   fontSize: [8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 36, 42, 55, 60],
   colorList: [
     [
@@ -4377,8 +4394,9 @@ const editorOptions = {
       "#222222",
     ],
   ],
-  imageUploadUrl: "http://localhost:8080/chazki-gateway/orders/upload",
-  imageGalleryUrl: "http://localhost:8080/chazki-gateway/orders/gallery",
+  imageUploadHandler: handleImageUpload,
+  // imageUploadUrl: "http://localhost:8080/chazki-gateway/orders/upload",
+  // imageGalleryUrl: "http://localhost:8080/chazki-gateway/orders/gallery",
 };
 
 export const TextEditor = () => {
@@ -4608,8 +4626,9 @@ export const TextEditor = () => {
             ;
           </Modal>
           <Row>
-            <Col span={6}>col</Col>
-            <Col span={12}>
+            {/* <Col span={6}>col</Col> */}
+            <Col span={24}>
+            {/* <iframe src={'https://docs.google.com/document/d/1S49JVpasrFe-mZaIKWWgnXTEeHNeagv629Oiz3eUTDQ/edit'} width="100%" height="100%" /> */}
               <SunEditor
                 getSunEditorInstance={getSunEditorInstance}
                 setOptions={editorOptions}
@@ -4628,7 +4647,8 @@ export const TextEditor = () => {
                 onChange={onChangeHandler}
               />
             </Col>
-            <Col span={6}>col</Col>
+            {/* <Col span={6}>col</Col> */}
+
           </Row>
         </>
       )}
